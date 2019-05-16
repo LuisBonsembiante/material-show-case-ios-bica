@@ -327,7 +327,7 @@ extension MaterialShowcase {
 
               // Create the path.
               let path = UIBezierPath(rect: self.bounds)
-              maskLayer.fillRule = CAShapelayerFillRule.evenOdd
+              maskLayer.fillRule = CAShapeLayerFillRule.evenOdd
 
               // Append the circle to the path so that it is subtracted.
               path.append(UIBezierPath(ovalIn: rect))
