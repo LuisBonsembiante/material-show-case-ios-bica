@@ -8,6 +8,7 @@
 import UIKit
 
 @objc public protocol MaterialShowcaseDelegate: class {
+  @objc optional func showCaseSkipped(showcase: MaterialShowcase)
   @objc optional func showCaseWillDismiss(showcase: MaterialShowcase, didTapTarget:Bool)
   @objc optional func showCaseDidDismiss(showcase: MaterialShowcase, didTapTarget:Bool)
 }
@@ -522,7 +523,7 @@ extension MaterialShowcase {
   }
 
 
-  rivate func addSkipButtonView() {
+  private func addSkipButtonView() {
       skipButtonView = SkipButtonView(with: skipText, size: skipTextSize)
       skipButtonView.delegate = self.delegate
       skipButtonView.showcaseViewTag = self.showcaseViewTag
