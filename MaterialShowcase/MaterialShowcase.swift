@@ -51,6 +51,7 @@ public class MaterialShowcase: UIView {
   var targetRippleView: UIView!
   var targetCopyView: UIView!
   var instructionView: MaterialShowcaseInstructionView!
+    var skipButtonView: SkipButtonView!
 
   // MARK: Public Properties
 
@@ -62,12 +63,25 @@ public class MaterialShowcase: UIView {
   // - false: recognize tap from all displayed showcase.
   // - true: recognize tap for targetView area only.
   @objc public var isTapRecognizerForTargetView: Bool = false
+   // Skip button
+      @objc public var isSkipButtonVisible: Bool = false
+      @objc public var skipTextFont: UIFont?
+      @objc public var skipText: String!
+      @objc public var skipTextSize: CGFloat = 0.0
+      @objc public var skipTextColor: UIColor!
+      @objc public var skipButtonBackgroundColor: UIColor!
+      @objc public var skipButtonBorderRadius: CGFloat = 2.0
+      @objc public var skipButtonMarginLeft: CGFloat = 20
+      @objc public var skipButtonMarginTop: CGFloat = 20
+      @objc public var skipButtonMarginRight: CGFloat = 20
+      @objc public var skipButtonMarginBottom: CGFloat = 20
   // Target
   @objc public var shouldSetTintColor: Bool = true
   @objc public var targetTintColor: UIColor!
   @objc public var targetHolderRadius: CGFloat = 0.0
   @objc public var targetHolderColor: UIColor!
   @objc public var targetTransparent: Bool = true
+
   // Text
   @objc public var primaryText: String!
   @objc public var secondaryText: String!
@@ -87,12 +101,14 @@ public class MaterialShowcase: UIView {
   @objc public var aniRippleAlpha: CGFloat = 0.0
   // Delegate
   @objc public weak var delegate: MaterialShowcaseDelegate?
+  @objc public var showcaseViewTag: Int = 100
 
   public init() {
     // Create frame
     let frame = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
     super.init(frame: frame)
-
+// Tag showcase view to pass as parameter in MaterialStructionView
+    self.tag = showcaseViewTag
     configure()
   }
 
@@ -225,8 +241,18 @@ extension MaterialShowcase {
     secondaryText = MaterialShowcaseInstructionView.SECONDARY_DEFAULT_TEXT
     primaryTextColor = MaterialShowcaseInstructionView.PRIMARY_TEXT_COLOR
     secondaryTextColor = MaterialShowcaseInstructionView.SECONDARY_TEXT_COLOR
+    skipTextColor = SkipButtonView.SKIP_TEXT_COLOR
     primaryTextSize = MaterialShowcaseInstructionView.PRIMARY_TEXT_SIZE
     secondaryTextSize = MaterialShowcaseInstructionView.SECONDARY_TEXT_SIZE
+      // Skip button
+        skipText = SkipButtonView.SKIP_DEFAULT_TEXT
+        skipTextSize = SkipButtonView.SKIP_TEXT_SIZE
+        skipButtonBackgroundColor = SkipButtonView.SKIP_BUTTON_BACKGROUND_COLOR
+        skipButtonBorderRadius = SkipButtonView.SKIP_BUTTON_BORDER_RADIUS
+        skipButtonMarginLeft = SkipButtonView.SKIP_BUTTON_MARGIN
+        skipButtonMarginTop = SkipButtonView.SKIP_BUTTON_MARGIN
+        skipButtonMarginRight = SkipButtonView.SKIP_BUTTON_MARGIN
+        skipButtonMarginBottom = SkipButtonView.SKIP_BUTTON_MARGIN
     // Animation
     aniComeInDuration = ANI_COMEIN_DURATION
     aniGoOutDuration = ANI_GOOUT_DURATION
@@ -290,6 +316,14 @@ extension MaterialShowcase {
       hiddenTargetHolderView.addGestureRecognizer(tapGestureRecoganizer())
       hiddenTargetHolderView.isUserInteractionEnabled = true
     }
+
+    if isSkipButtonVisible {
+          addSkipButtonView()
+          skipButtonView.layoutIfNeeded()
+          containerView.backgroundColor = UIColor.white
+          self.skipButtonView.isUserInteractionEnabled = true
+        }
+
   }
 
   /// Add background which is a big circle
@@ -486,6 +520,81 @@ extension MaterialShowcase {
       addSubview(instructionView)
     }
   }
+
+
+  rivate func addSkipButtonView() {
+      skipButtonView = SkipButtonView(with: skipText, size: skipTextSize)
+      skipButtonView.delegate = self.delegate
+      skipButtonView.showcaseViewTag = self.showcaseViewTag
+
+      skipButtonView.skipTextFont = skipTextFont
+      skipButtonView.skipTextSize = skipTextSize
+      skipButtonView.skipTextColor = skipTextColor
+      skipButtonView.skipText = skipText
+      skipButtonView.isSkipButtonVisible = isSkipButtonVisible
+      skipButtonView.skipButtonBackgroundColor = skipButtonBackgroundColor
+      skipButtonView.skipButtonBorderRadius = skipButtonBorderRadius
+      skipButtonView.skipButtonMarginLeft = skipButtonMarginLeft
+      skipButtonView.skipButtonMarginTop = skipButtonMarginTop
+      skipButtonView.skipButtonMarginRight = skipButtonMarginRight
+      skipButtonView.skipButtonMarginBottom = skipButtonMarginBottom
+
+      let skipButtonPosition = calculateSkipButtonPosition(with: backgroundView.frame)
+      skipButtonView.frame = CGRect(x: skipButtonPosition.x, y: skipButtonPosition.y, width: skipButtonView.frame.width, height: skipButtonView.frame.height)
+
+  //    if UIDevice.current.userInterfaceIdiom == .pad {
+  //        self.backgroundColor = UIColor.black.withAlphaComponent(0.3)
+  //        addSubview(skipButtonView)
+  //    } else {
+      self.backgroundColor = UIColor.black.withAlphaComponent(0.3)
+      addSubview(skipButtonView)
+  //    }
+    }
+
+    private func calculateSkipButtonPosition(with outerCircleRect: CGRect) -> CGPoint {
+      let screenWidth = UIScreen.main.bounds.width
+      let screenHeight = UIScreen.main.bounds.height
+      let skipButtonWidth = skipButtonView.frame.width
+      let skipButtonHeight = skipButtonView.frame.height
+
+      // bottom right
+      let bottomRightX = screenWidth - skipButtonMarginRight - skipButtonWidth
+      let bottomRightY = screenHeight - skipButtonMarginBottom - skipButtonHeight
+      let bottomRightPoint = CGPoint(x: bottomRightX, y: bottomRightY)
+
+      // bottom left
+      let bottomLeftX = skipButtonMarginLeft
+      let bottomLeftY = screenHeight - skipButtonMarginBottom - skipButtonHeight
+      let bottomLeftPoint = CGPoint(x: bottomLeftX, y: bottomLeftY)
+
+      // top right
+      let topRightX = screenWidth - skipButtonMarginRight - skipButtonWidth
+      let topRightY = skipButtonMarginTop
+      let topRightPoint = CGPoint(x: topRightX, y: topRightY)
+
+      // top left
+      let topLeftX = skipButtonMarginLeft
+      let topLeftY = skipButtonMarginTop
+      let topLeftPoint = CGPoint(x: topLeftX, y: topLeftY)
+      let res: CGPoint!
+      if outerCircleRect.contains(bottomRightPoint) == false {
+          res = bottomRightPoint
+      }
+      else if outerCircleRect.contains(topRightPoint) == false {
+        res = topRightPoint
+      }
+      else if outerCircleRect.contains(bottomLeftPoint) == false {
+        res = bottomLeftPoint
+      }
+      else if outerCircleRect.contains(topLeftPoint) == false {
+        res = topLeftPoint
+      }
+      else {
+        res = bottomRightPoint
+      }
+
+      return res
+    }
 
   /// Handles user's tap
   private func tapGestureRecoganizer() -> UIGestureRecognizer {
